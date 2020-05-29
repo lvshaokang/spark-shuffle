@@ -7,6 +7,7 @@ import org.apache.spark.{SparkConf, SparkContext}
  * spark 1.6.0
  * ls -lR|grep "^-"|wc -l
  * hash shuffle 6 M * N M:MapTask N"ReduceTask (Partition)
+ * hash shuffle consolidateFiles 6
  * sort shuffle 4 ??? k * 2 (data file handle + index file handle)
  * k:core nums，如果一个executor上有k个core，那么executor同时可运行k个task
  * tungsten-sort shuffle 4 序列化
@@ -20,7 +21,8 @@ object HashShuffleApp02 {
     val sparkConf = new SparkConf().
       setMaster("local[2]")
       .setAppName(this.getClass.getSimpleName)
-      .set("spark.shuffle.manager","sort")
+      .set("spark.shuffle.manager","hash")
+      .set("spark.shuffle.consolidateFiles","true")
     
     val sc = new SparkContext(sparkConf)
     
@@ -29,6 +31,10 @@ object HashShuffleApp02 {
     ),2)
     
     val rdd = lines.flatMap(_.split(",")).map((_,1))
+  
+    import org.apache.spark.SparkContext._
+  
+//    rdd.combineByKey()
   
     val reduceRDD = rdd.reduceByKey(_ + _, 3)
   
